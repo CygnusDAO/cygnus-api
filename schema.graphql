@@ -1,0 +1,1015 @@
+#
+# Timestamp is always an optional paramter to check status of the protocol at a specific time
+#
+type Query {
+  # Retrieves information about a specific chain.
+  #
+  # Arguments:
+  # - `id`: The Chain ID (should be an integer)
+  chain(id: Int!, timestamp: Int): Chain
+  # Plural for information of all chains
+  chains(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: String = "id"
+    orderDirection: String = "asc"
+    where: ChainFilter
+    timestamp: Int
+  ): [Chain!]!
+
+  # Retrieves information about a specific lending pool.
+  #
+  # Arguments:
+  # - `id`: Combination of `{chainId}-{shuttleId}`. ie. '137-0' for lending pool 0 on polygon
+  shuttle(id: String!, timestamp: Int): Shuttle
+  # Plural for information of all shuttles
+  shuttles(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: String = "id"
+    orderDirection: String = "asc"
+    where: ShuttleFilter
+    timestamp: Int
+  ): [Shuttle!]!
+
+  # Retrieves information about a specific lending pool on a given day.
+  #
+  # Note that block.timestamp in the ID is always the UNIX timestamp at 0:00:00 in GMT / 1000
+  # ie. `137-0-1700092800` = Info for shuttle 0 on polygon at Nov 16 2023 0:00:00 (new Date(1700092800 * 1000))
+  #
+  # Arguments:
+  # - `id`: Combination of `{chainId}-{shuttleId}-{block.timestamp}`
+  shuttleInfoDay(id: String!, timestamp: Int): ShuttleInfoDay
+  # Plural for daily information of all shuttles
+  shuttleInfoDays(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: String = "id"
+    orderDirection: String = "asc"
+    where: ShuttleInfoDayFilter
+    timestamp: Int
+  ): [ShuttleInfoDay!]!
+
+  # Retrieves the balance of a specific holder of a collateral token (CygLP)
+  #
+  # Arguments:
+  # - `id` - Combination of `{chainId}-{collateral}-{holderAddress}`
+  cygLPHolder(id: String!, timestamp: Int): CygLPHolder
+  # Plural for current holders of all collaterals
+  cygLPHolders(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: String = "id"
+    orderDirection: String = "asc"
+    where: CygLPHolderFilter
+    timestamp: Int
+  ): [CygLPHolder!]!
+
+  # Retrieves the balance of a specific holder of a borrowable token (CygUSD)
+  #
+  # Arguments:
+  # - `id` - Combination of `{chainId}-{borrowable}-{holderAddress}`
+  cygUSDHolder(id: String!, timestamp: Int): CygUSDHolder
+  # Plural for current holders of all borrowables
+  cygUSDHolders(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: String = "id"
+    orderDirection: String = "asc"
+    where: CygUSDHolderFilter
+    timestamp: Int
+  ): [CygUSDHolder!]!
+
+  # Retrieves the borrow balance of a specific borrower
+  #
+  # Arguments:
+  # - `id` - Combination of `{chainId}-{borrowable}-{borrowerAddress}`
+  borrower(id: String!, timestamp: Int): Borrower
+  # Plural for current borrowables of all lending pools
+  borrowers(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: String = "id"
+    orderDirection: String = "asc"
+    where: BorrowerFilter
+    timestamp: Int
+  ): [Borrower!]!
+
+  # Retrieves the information of a specific liquidation in a lending pool
+  #
+  # Arguments:
+  #  - `id` - Combination of `{chainId}-{borrowable}-{liquidationId}` where liquidation ID starts at 0
+  liquidation(id: String!, timestamp: Int): Liquidation
+  # Plural for all recorded liquidations in the protocol across all lending pools
+  liquidations(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: String = "id"
+    orderDirection: String = "asc"
+    where: LiquidationFilter
+    timestamp: Int
+  ): [Liquidation!]!
+
+  # Retrieves the information of users who were liquidated OR performed the liquidation. Returns profits, losses, etc.
+  #
+  # Arguments:
+  #  - `id` - Combination of `{chainId}-{liquidatorAddress-OR-borrowerAddress}`
+  liquidator(id: String!, timestamp: Int): Liquidator
+  # Plural for all recorded liquidators in the protocol
+  liquidators(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: String = "id"
+    orderDirection: String = "asc"
+    where: LiquidatorFilter
+    timestamp: Int
+  ): [Liquidator!]!
+}
+
+##################
+# 1. CHAIN       #
+##################
+
+type Chain {
+  id: Int!
+  cygnusTvlUSD: String!
+  chainId: Int!
+  chainName: String!
+  allCollateralsUSD: String!
+  allBorrowablesUSD: String!
+  totalBorrowsUSD: String!
+  totalLiquidations: Int!
+}
+
+##########################
+# 2. LENDING POOLS       #
+##########################
+
+type Shuttle {
+  id: String!
+  shuttleId: BigInt!
+  lpTokenPair: String!
+  borrowable: String!
+  collateral: String!
+  orbiterId: BigInt!
+  chainId: Int!
+  strategy: String!
+  createdAt: String!
+}
+
+####################################
+# 3. DAILY LENDING POOL INFO       #
+####################################
+
+type ShuttleInfoDay {
+  id: String!
+  timestamp: BigInt!
+  day: String!
+  shuttleId: BigInt!
+  chainId: Int!
+  borrowableTvlUSD: String!
+  collateralTvlUSD: String!
+  totalBalanceB: String!
+  totalBalanceC: String!
+  totalBorrows: String!
+  liquidationIncentive: String!
+  liquidationFee: String!
+  debtRatio: String!
+  lpTokenPrice: String!
+  reserveFactor: String!
+  supplyAPY: String!
+  borrowAPY: String!
+  utilizationRate: String!
+  kink: String!
+  borrowIndex: String!
+}
+
+####################################
+# 4. COLLATERAL HOLDERS            #
+####################################
+
+type CygLPHolder {
+  id: String!
+  shuttleId: BigInt!
+  borrowable: String!
+  collateral: String!
+  holder: String!
+  balance: String!
+  chainId: Int!
+}
+
+scalar BigInt
+
+####################################
+# 5. BORROWABLE HOLDERS            #
+####################################
+
+type CygUSDHolder {
+  id: String!
+  shuttleId: BigInt!
+  borrowable: String!
+  collateral: String!
+  holder: String!
+  balance: String!
+  chainId: Int!
+}
+
+####################################
+# 6. CURRENT PROTOCOL BORROWERS    #
+####################################
+
+type Borrower {
+  id: String!
+  chainId: Int!
+  shuttleId: BigInt!
+  borrowable: String!
+  collateral: String!
+  borrower: String!
+  cygLPBalance: String!
+  lpBalance: String!
+  positionUSD: String!
+  health: String!
+  principal: String!
+  borrowBalance: String!
+  lastActivity: String!
+}
+
+#########################
+# 7. LIQUIDATIONS       #
+#########################
+
+type Liquidation {
+  id: String!
+  timestamp: BigInt!
+  date: String!
+  chainId: Int!
+  shuttleId: BigInt!
+  sender: String!
+  liquidator: String!
+  borrower: String!
+  repayAmountUSD: String!
+  seizedCygLP: String!
+  liquidatorProfitUSD: String!
+  liquidationIncentive: String!
+  liquidationFee: String!
+}
+
+#########################
+# 8. LIQUIDATORS        #
+#########################
+
+type Liquidator {
+  id: String!
+  chainId: Int!
+  profit: String!
+  losses: String!
+  user: String!
+  timesLiquidated: Int!
+  timesLiquidating: Int!
+}
+
+## INPUTS ##
+
+input ShuttleFilter {
+  id: String
+  id_not: String
+  id_in: [String]
+  id_not_in: [String]
+  id_contains: String
+  id_not_contains: String
+  id_starts_with: String
+  id_ends_with: String
+  id_not_starts_with: String
+  id_not_ends_with: String
+  shuttleId: BigInt
+  shuttleId_not: BigInt
+  shuttleId_in: [BigInt]
+  shuttleId_not_in: [BigInt]
+  shuttleId_gt: BigInt
+  shuttleId_lt: BigInt
+  shuttleId_gte: BigInt
+  shuttleId_lte: BigInt
+  lpTokenPair: String
+  lpTokenPair_not: String
+  lpTokenPair_in: [String]
+  lpTokenPair_not_in: [String]
+  lpTokenPair_contains: String
+  lpTokenPair_not_contains: String
+  lpTokenPair_starts_with: String
+  lpTokenPair_ends_with: String
+  lpTokenPair_not_starts_with: String
+  lpTokenPair_not_ends_with: String
+  borrowable: String
+  borrowable_not: String
+  borrowable_in: [String]
+  borrowable_not_in: [String]
+  borrowable_contains: String
+  borrowable_not_contains: String
+  borrowable_starts_with: String
+  borrowable_ends_with: String
+  borrowable_not_starts_with: String
+  borrowable_not_ends_with: String
+  collateral: String
+  collateral_not: String
+  collateral_in: [String]
+  collateral_not_in: [String]
+  collateral_contains: String
+  collateral_not_contains: String
+  collateral_starts_with: String
+  collateral_ends_with: String
+  collateral_not_starts_with: String
+  collateral_not_ends_with: String
+  orbiterId: BigInt
+  orbiterId_not: BigInt
+  orbiterId_in: [BigInt]
+  orbiterId_not_in: [BigInt]
+  orbiterId_gt: BigInt
+  orbiterId_lt: BigInt
+  orbiterId_gte: BigInt
+  orbiterId_lte: BigInt
+  chainId: Int
+  chainId_not: Int
+  chainId_in: [Int]
+  chainId_not_in: [Int]
+  chainId_gt: Int
+  chainId_lt: Int
+  chainId_gte: Int
+  chainId_lte: Int
+  strategy: String
+  strategy_not: String
+  strategy_in: [String]
+  strategy_not_in: [String]
+  strategy_contains: String
+  strategy_not_contains: String
+  strategy_starts_with: String
+  strategy_ends_with: String
+  strategy_not_starts_with: String
+  strategy_not_ends_with: String
+  createdAt: String
+  createdAt_not: String
+  createdAt_in: [String]
+  createdAt_not_in: [String]
+  createdAt_contains: String
+  createdAt_not_contains: String
+  createdAt_starts_with: String
+  createdAt_ends_with: String
+  createdAt_not_starts_with: String
+  createdAt_not_ends_with: String
+}
+
+input ShuttleInfoDayFilter {
+  id: String
+  id_not: String
+  id_in: [String]
+  id_not_in: [String]
+  id_contains: String
+  id_not_contains: String
+  id_starts_with: String
+  id_ends_with: String
+  id_not_starts_with: String
+  id_not_ends_with: String
+  timestamp: BigInt
+  timestamp_not: BigInt
+  timestamp_in: [BigInt]
+  timestamp_not_in: [BigInt]
+  timestamp_gt: BigInt
+  timestamp_lt: BigInt
+  timestamp_gte: BigInt
+  timestamp_lte: BigInt
+  day: String
+  day_not: String
+  day_in: [String]
+  day_not_in: [String]
+  day_contains: String
+  day_not_contains: String
+  day_starts_with: String
+  day_ends_with: String
+  day_not_starts_with: String
+  day_not_ends_with: String
+  shuttleId: BigInt
+  shuttleId_not: BigInt
+  shuttleId_in: [BigInt]
+  shuttleId_not_in: [BigInt]
+  shuttleId_gt: BigInt
+  shuttleId_lt: BigInt
+  shuttleId_gte: BigInt
+  shuttleId_lte: BigInt
+  chainId: Int
+  chainId_not: Int
+  chainId_in: [Int]
+  chainId_not_in: [Int]
+  chainId_gt: Int
+  chainId_lt: Int
+  chainId_gte: Int
+  chainId_lte: Int
+  borrowableTvlUSD: String
+  borrowableTvlUSD_not: String
+  borrowableTvlUSD_in: [String]
+  borrowableTvlUSD_not_in: [String]
+  borrowableTvlUSD_contains: String
+  borrowableTvlUSD_not_contains: String
+  borrowableTvlUSD_starts_with: String
+  borrowableTvlUSD_ends_with: String
+  borrowableTvlUSD_not_starts_with: String
+  borrowableTvlUSD_not_ends_with: String
+  collateralTvlUSD: String
+  collateralTvlUSD_not: String
+  collateralTvlUSD_in: [String]
+  collateralTvlUSD_not_in: [String]
+  collateralTvlUSD_contains: String
+  collateralTvlUSD_not_contains: String
+  collateralTvlUSD_starts_with: String
+  collateralTvlUSD_ends_with: String
+  collateralTvlUSD_not_starts_with: String
+  collateralTvlUSD_not_ends_with: String
+  totalBalanceB: String
+  totalBalanceB_not: String
+  totalBalanceB_in: [String]
+  totalBalanceB_not_in: [String]
+  totalBalanceB_contains: String
+  totalBalanceB_not_contains: String
+  totalBalanceB_starts_with: String
+  totalBalanceB_ends_with: String
+  totalBalanceB_not_starts_with: String
+  totalBalanceB_not_ends_with: String
+  totalBalanceC: String
+  totalBalanceC_not: String
+  totalBalanceC_in: [String]
+  totalBalanceC_not_in: [String]
+  totalBalanceC_contains: String
+  totalBalanceC_not_contains: String
+  totalBalanceC_starts_with: String
+  totalBalanceC_ends_with: String
+  totalBalanceC_not_starts_with: String
+  totalBalanceC_not_ends_with: String
+  totalBorrows: String
+  totalBorrows_not: String
+  totalBorrows_in: [String]
+  totalBorrows_not_in: [String]
+  totalBorrows_contains: String
+  totalBorrows_not_contains: String
+  totalBorrows_starts_with: String
+  totalBorrows_ends_with: String
+  totalBorrows_not_starts_with: String
+  totalBorrows_not_ends_with: String
+  liquidationIncentive: String
+  liquidationIncentive_not: String
+  liquidationIncentive_in: [String]
+  liquidationIncentive_not_in: [String]
+  liquidationIncentive_contains: String
+  liquidationIncentive_not_contains: String
+  liquidationIncentive_starts_with: String
+  liquidationIncentive_ends_with: String
+  liquidationIncentive_not_starts_with: String
+  liquidationIncentive_not_ends_with: String
+  liquidationFee: String
+  liquidationFee_not: String
+  liquidationFee_in: [String]
+  liquidationFee_not_in: [String]
+  liquidationFee_contains: String
+  liquidationFee_not_contains: String
+  liquidationFee_starts_with: String
+  liquidationFee_ends_with: String
+  liquidationFee_not_starts_with: String
+  liquidationFee_not_ends_with: String
+  debtRatio: String
+  debtRatio_not: String
+  debtRatio_in: [String]
+  debtRatio_not_in: [String]
+  debtRatio_contains: String
+  debtRatio_not_contains: String
+  debtRatio_starts_with: String
+  debtRatio_ends_with: String
+  debtRatio_not_starts_with: String
+  debtRatio_not_ends_with: String
+  lpTokenPrice: String
+  lpTokenPrice_not: String
+  lpTokenPrice_in: [String]
+  lpTokenPrice_not_in: [String]
+  lpTokenPrice_contains: String
+  lpTokenPrice_not_contains: String
+  lpTokenPrice_starts_with: String
+  lpTokenPrice_ends_with: String
+  lpTokenPrice_not_starts_with: String
+  lpTokenPrice_not_ends_with: String
+  reserveFactor: String
+  reserveFactor_not: String
+  reserveFactor_in: [String]
+  reserveFactor_not_in: [String]
+  reserveFactor_contains: String
+  reserveFactor_not_contains: String
+  reserveFactor_starts_with: String
+  reserveFactor_ends_with: String
+  reserveFactor_not_starts_with: String
+  reserveFactor_not_ends_with: String
+  supplyAPY: String
+  supplyAPY_not: String
+  supplyAPY_in: [String]
+  supplyAPY_not_in: [String]
+  supplyAPY_contains: String
+  supplyAPY_not_contains: String
+  supplyAPY_starts_with: String
+  supplyAPY_ends_with: String
+  supplyAPY_not_starts_with: String
+  supplyAPY_not_ends_with: String
+  borrowAPY: String
+  borrowAPY_not: String
+  borrowAPY_in: [String]
+  borrowAPY_not_in: [String]
+  borrowAPY_contains: String
+  borrowAPY_not_contains: String
+  borrowAPY_starts_with: String
+  borrowAPY_ends_with: String
+  borrowAPY_not_starts_with: String
+  borrowAPY_not_ends_with: String
+  utilizationRate: String
+  utilizationRate_not: String
+  utilizationRate_in: [String]
+  utilizationRate_not_in: [String]
+  utilizationRate_contains: String
+  utilizationRate_not_contains: String
+  utilizationRate_starts_with: String
+  utilizationRate_ends_with: String
+  utilizationRate_not_starts_with: String
+  utilizationRate_not_ends_with: String
+  kink: String
+  kink_not: String
+  kink_in: [String]
+  kink_not_in: [String]
+  kink_contains: String
+  kink_not_contains: String
+  kink_starts_with: String
+  kink_ends_with: String
+  kink_not_starts_with: String
+  kink_not_ends_with: String
+  borrowIndex: String
+  borrowIndex_not: String
+  borrowIndex_in: [String]
+  borrowIndex_not_in: [String]
+  borrowIndex_contains: String
+  borrowIndex_not_contains: String
+  borrowIndex_starts_with: String
+  borrowIndex_ends_with: String
+  borrowIndex_not_starts_with: String
+  borrowIndex_not_ends_with: String
+}
+
+input CygLPHolderFilter {
+  id: String
+  id_not: String
+  id_in: [String]
+  id_not_in: [String]
+  id_contains: String
+  id_not_contains: String
+  id_starts_with: String
+  id_ends_with: String
+  id_not_starts_with: String
+  id_not_ends_with: String
+  shuttleId: BigInt
+  shuttleId_not: BigInt
+  shuttleId_in: [BigInt]
+  shuttleId_not_in: [BigInt]
+  shuttleId_gt: BigInt
+  shuttleId_lt: BigInt
+  shuttleId_gte: BigInt
+  shuttleId_lte: BigInt
+  borrowable: String
+  borrowable_not: String
+  borrowable_in: [String]
+  borrowable_not_in: [String]
+  borrowable_contains: String
+  borrowable_not_contains: String
+  borrowable_starts_with: String
+  borrowable_ends_with: String
+  borrowable_not_starts_with: String
+  borrowable_not_ends_with: String
+  collateral: String
+  collateral_not: String
+  collateral_in: [String]
+  collateral_not_in: [String]
+  collateral_contains: String
+  collateral_not_contains: String
+  collateral_starts_with: String
+  collateral_ends_with: String
+  collateral_not_starts_with: String
+  collateral_not_ends_with: String
+  holder: String
+  holder_not: String
+  holder_in: [String]
+  holder_not_in: [String]
+  holder_contains: String
+  holder_not_contains: String
+  holder_starts_with: String
+  holder_ends_with: String
+  holder_not_starts_with: String
+  holder_not_ends_with: String
+  balance: String
+  balance_not: String
+  balance_in: [String]
+  balance_not_in: [String]
+  balance_contains: String
+  balance_not_contains: String
+  balance_starts_with: String
+  balance_ends_with: String
+  balance_not_starts_with: String
+  balance_not_ends_with: String
+  chainId: Int
+  chainId_not: Int
+  chainId_in: [Int]
+  chainId_not_in: [Int]
+  chainId_gt: Int
+  chainId_lt: Int
+  chainId_gte: Int
+  chainId_lte: Int
+}
+input CygUSDHolderFilter {
+  id: String
+  id_not: String
+  id_in: [String]
+  id_not_in: [String]
+  id_contains: String
+  id_not_contains: String
+  id_starts_with: String
+  id_ends_with: String
+  id_not_starts_with: String
+  id_not_ends_with: String
+  shuttleId: BigInt
+  shuttleId_not: BigInt
+  shuttleId_in: [BigInt]
+  shuttleId_not_in: [BigInt]
+  shuttleId_gt: BigInt
+  shuttleId_lt: BigInt
+  shuttleId_gte: BigInt
+  shuttleId_lte: BigInt
+  borrowable: String
+  borrowable_not: String
+  borrowable_in: [String]
+  borrowable_not_in: [String]
+  borrowable_contains: String
+  borrowable_not_contains: String
+  borrowable_starts_with: String
+  borrowable_ends_with: String
+  borrowable_not_starts_with: String
+  borrowable_not_ends_with: String
+  collateral: String
+  collateral_not: String
+  collateral_in: [String]
+  collateral_not_in: [String]
+  collateral_contains: String
+  collateral_not_contains: String
+  collateral_starts_with: String
+  collateral_ends_with: String
+  collateral_not_starts_with: String
+  collateral_not_ends_with: String
+  holder: String
+  holder_not: String
+  holder_in: [String]
+  holder_not_in: [String]
+  holder_contains: String
+  holder_not_contains: String
+  holder_starts_with: String
+  holder_ends_with: String
+  holder_not_starts_with: String
+  holder_not_ends_with: String
+  balance: String
+  balance_not: String
+  balance_in: [String]
+  balance_not_in: [String]
+  balance_contains: String
+  balance_not_contains: String
+  balance_starts_with: String
+  balance_ends_with: String
+  balance_not_starts_with: String
+  balance_not_ends_with: String
+  chainId: Int
+  chainId_not: Int
+  chainId_in: [Int]
+  chainId_not_in: [Int]
+  chainId_gt: Int
+  chainId_lt: Int
+  chainId_gte: Int
+  chainId_lte: Int
+}
+
+input BorrowerFilter {
+  id: String
+  id_not: String
+  id_in: [String]
+  id_not_in: [String]
+  id_contains: String
+  id_not_contains: String
+  id_starts_with: String
+  id_ends_with: String
+  id_not_starts_with: String
+  id_not_ends_with: String
+  chainId: Int
+  chainId_not: Int
+  chainId_in: [Int]
+  chainId_not_in: [Int]
+  chainId_gt: Int
+  chainId_lt: Int
+  chainId_gte: Int
+  chainId_lte: Int
+  shuttleId: BigInt
+  shuttleId_not: BigInt
+  shuttleId_in: [BigInt]
+  shuttleId_not_in: [BigInt]
+  shuttleId_gt: BigInt
+  shuttleId_lt: BigInt
+  shuttleId_gte: BigInt
+  shuttleId_lte: BigInt
+  borrowable: String
+  borrowable_not: String
+  borrowable_in: [String]
+  borrowable_not_in: [String]
+  borrowable_contains: String
+  borrowable_not_contains: String
+  borrowable_starts_with: String
+  borrowable_ends_with: String
+  borrowable_not_starts_with: String
+  borrowable_not_ends_with: String
+  collateral: String
+  collateral_not: String
+  collateral_in: [String]
+  collateral_not_in: [String]
+  collateral_contains: String
+  collateral_not_contains: String
+  collateral_starts_with: String
+  collateral_ends_with: String
+  collateral_not_starts_with: String
+  collateral_not_ends_with: String
+  borrower: String
+  borrower_not: String
+  borrower_in: [String]
+  borrower_not_in: [String]
+  borrower_contains: String
+  borrower_not_contains: String
+  borrower_starts_with: String
+  borrower_ends_with: String
+  borrower_not_starts_with: String
+  borrower_not_ends_with: String
+  cygLPBalance: String
+  cygLPBalance_not: String
+  cygLPBalance_in: [String]
+  cygLPBalance_not_in: [String]
+  cygLPBalance_contains: String
+  cygLPBalance_not_contains: String
+  cygLPBalance_starts_with: String
+  cygLPBalance_ends_with: String
+  cygLPBalance_not_starts_with: String
+  cygLPBalance_not_ends_with: String
+  lpBalance: String
+  lpBalance_not: String
+  lpBalance_in: [String]
+  lpBalance_not_in: [String]
+  lpBalance_contains: String
+  lpBalance_not_contains: String
+  lpBalance_starts_with: String
+  lpBalance_ends_with: String
+  lpBalance_not_starts_with: String
+  lpBalance_not_ends_with: String
+  positionUSD: String
+  positionUSD_not: String
+  positionUSD_in: [String]
+  positionUSD_not_in: [String]
+  positionUSD_contains: String
+  positionUSD_not_contains: String
+  positionUSD_starts_with: String
+  positionUSD_ends_with: String
+  positionUSD_not_starts_with: String
+  positionUSD_not_ends_with: String
+  health: String
+  health_not: String
+  health_in: [String]
+  health_not_in: [String]
+  health_contains: String
+  health_not_contains: String
+  health_starts_with: String
+  health_ends_with: String
+  health_not_starts_with: String
+  health_not_ends_with: String
+  principal: String
+  principal_not: String
+  principal_in: [String]
+  principal_not_in: [String]
+  principal_contains: String
+  principal_not_contains: String
+  principal_starts_with: String
+  principal_ends_with: String
+  principal_not_starts_with: String
+  principal_not_ends_with: String
+  borrowBalance: String
+  borrowBalance_not: String
+  borrowBalance_in: [String]
+  borrowBalance_not_in: [String]
+  borrowBalance_contains: String
+  borrowBalance_not_contains: String
+  borrowBalance_starts_with: String
+  borrowBalance_ends_with: String
+  borrowBalance_not_starts_with: String
+  borrowBalance_not_ends_with: String
+  lastActivity: String
+  lastActivity_not: String
+  lastActivity_in: [String]
+  lastActivity_not_in: [String]
+  lastActivity_contains: String
+  lastActivity_not_contains: String
+  lastActivity_starts_with: String
+  lastActivity_ends_with: String
+  lastActivity_not_starts_with: String
+  lastActivity_not_ends_with: String
+}
+
+input LiquidationFilter {
+  id: String
+  id_not: String
+  id_in: [String]
+  id_not_in: [String]
+  id_contains: String
+  id_not_contains: String
+  id_starts_with: String
+  id_ends_with: String
+  id_not_starts_with: String
+  id_not_ends_with: String
+  timestamp: BigInt
+  timestamp_not: BigInt
+  timestamp_in: [BigInt]
+  timestamp_not_in: [BigInt]
+  timestamp_gt: BigInt
+  timestamp_lt: BigInt
+  timestamp_gte: BigInt
+  timestamp_lte: BigInt
+  date: String
+  date_not: String
+  date_in: [String]
+  date_not_in: [String]
+  date_contains: String
+  date_not_contains: String
+  date_starts_with: String
+  date_ends_with: String
+  date_not_starts_with: String
+  date_not_ends_with: String
+  chainId: Int
+  chainId_not: Int
+  chainId_in: [Int]
+  chainId_not_in: [Int]
+  chainId_gt: Int
+  chainId_lt: Int
+  chainId_gte: Int
+  chainId_lte: Int
+  shuttleId: BigInt
+  shuttleId_not: BigInt
+  shuttleId_in: [BigInt]
+  shuttleId_not_in: [BigInt]
+  shuttleId_gt: BigInt
+  shuttleId_lt: BigInt
+  shuttleId_gte: BigInt
+  shuttleId_lte: BigInt
+  sender: String
+  sender_not: String
+  sender_in: [String]
+  sender_not_in: [String]
+  sender_contains: String
+  sender_not_contains: String
+  sender_starts_with: String
+  sender_ends_with: String
+  sender_not_starts_with: String
+  sender_not_ends_with: String
+  liquidator: String
+  liquidator_not: String
+  liquidator_in: [String]
+  liquidator_not_in: [String]
+  liquidator_contains: String
+  liquidator_not_contains: String
+  liquidator_starts_with: String
+  liquidator_ends_with: String
+  liquidator_not_starts_with: String
+  liquidator_not_ends_with: String
+  borrower: String
+  borrower_not: String
+  borrower_in: [String]
+  borrower_not_in: [String]
+  borrower_contains: String
+  borrower_not_contains: String
+  borrower_starts_with: String
+  borrower_ends_with: String
+  borrower_not_starts_with: String
+  borrower_not_ends_with: String
+  repayAmountUSD: String
+  repayAmountUSD_not: String
+  repayAmountUSD_in: [String]
+  repayAmountUSD_not_in: [String]
+  repayAmountUSD_contains: String
+  repayAmountUSD_not_contains: String
+  repayAmountUSD_starts_with: String
+  repayAmountUSD_ends_with: String
+  repayAmountUSD_not_starts_with: String
+  repayAmountUSD_not_ends_with: String
+  seizedCygLP: String
+  seizedCygLP_not: String
+  seizedCygLP_in: [String]
+  seizedCygLP_not_in: [String]
+  seizedCygLP_contains: String
+  seizedCygLP_not_contains: String
+  seizedCygLP_starts_with: String
+  seizedCygLP_ends_with: String
+  seizedCygLP_not_starts_with: String
+  seizedCygLP_not_ends_with: String
+  liquidatorProfitUSD: String
+  liquidatorProfitUSD_not: String
+  liquidatorProfitUSD_in: [String]
+  liquidatorProfitUSD_not_in: [String]
+  liquidatorProfitUSD_contains: String
+  liquidatorProfitUSD_not_contains: String
+  liquidatorProfitUSD_starts_with: String
+  liquidatorProfitUSD_ends_with: String
+  liquidatorProfitUSD_not_starts_with: String
+  liquidatorProfitUSD_not_ends_with: String
+  liquidationIncentive: String
+  liquidationIncentive_not: String
+  liquidationIncentive_in: [String]
+  liquidationIncentive_not_in: [String]
+  liquidationIncentive_contains: String
+  liquidationIncentive_not_contains: String
+  liquidationIncentive_starts_with: String
+  liquidationIncentive_ends_with: String
+  liquidationIncentive_not_starts_with: String
+  liquidationIncentive_not_ends_with: String
+  liquidationFee: String
+  liquidationFee_not: String
+  liquidationFee_in: [String]
+  liquidationFee_not_in: [String]
+  liquidationFee_contains: String
+  liquidationFee_not_contains: String
+  liquidationFee_starts_with: String
+  liquidationFee_ends_with: String
+  liquidationFee_not_starts_with: String
+  liquidationFee_not_ends_with: String
+}
+
+input LiquidatorFilter {
+  id: String
+  id_not: String
+  id_in: [String]
+  id_not_in: [String]
+  id_contains: String
+  id_not_contains: String
+  id_starts_with: String
+  id_ends_with: String
+  id_not_starts_with: String
+  id_not_ends_with: String
+  chainId: Int
+  chainId_not: Int
+  chainId_in: [Int]
+  chainId_not_in: [Int]
+  chainId_gt: Int
+  chainId_lt: Int
+  chainId_gte: Int
+  chainId_lte: Int
+  profit: String
+  profit_not: String
+  profit_in: [String]
+  profit_not_in: [String]
+  profit_contains: String
+  profit_not_contains: String
+  profit_starts_with: String
+  profit_ends_with: String
+  profit_not_starts_with: String
+  profit_not_ends_with: String
+  losses: String
+  losses_not: String
+  losses_in: [String]
+  losses_not_in: [String]
+  losses_contains: String
+  losses_not_contains: String
+  losses_starts_with: String
+  losses_ends_with: String
+  losses_not_starts_with: String
+  losses_not_ends_with: String
+  user: String
+  user_not: String
+  user_in: [String]
+  user_not_in: [String]
+  user_contains: String
+  user_not_contains: String
+  user_starts_with: String
+  user_ends_with: String
+  user_not_starts_with: String
+  user_not_ends_with: String
+  timesLiquidated: Int
+  timesLiquidated_not: Int
+  timesLiquidated_in: [Int]
+  timesLiquidated_not_in: [Int]
+  timesLiquidated_gt: Int
+  timesLiquidated_lt: Int
+  timesLiquidated_gte: Int
+  timesLiquidated_lte: Int
+  timesLiquidating: Int
+  timesLiquidating_not: Int
+  timesLiquidating_in: [Int]
+  timesLiquidating_not_in: [Int]
+  timesLiquidating_gt: Int
+  timesLiquidating_lt: Int
+  timesLiquidating_gte: Int
+  timesLiquidating_lte: Int
+}
