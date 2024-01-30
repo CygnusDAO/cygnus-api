@@ -14,9 +14,14 @@ etc, etc.
 <br />
 The api is accessible by all at: https://api.cygnusdao.finance
 
-# Example Queries
+## Features
+- Comprehensive Data: Access detailed information about Cygnus Finance on different chains.
+- User-Friendly Queries: Execute GraphQL queries to retrieve specific data points tailored to your needs.
+- Public API Access: The API is publicly accessible, making it easy for developers to integrate Cygnus Finance data into their applications.
 
-## Get all lender addresses on Arbitrum:
+## Example Queries
+
+### Get all lender addresses on Arbitrum:
 
 ```graphql
 query Lenders {
@@ -75,7 +80,7 @@ Output:
   }
 }
 ```
-## Get all current borrowers on Polygon
+### Get all current borrowers on Polygon
 
 ```graphql
 query Borrowers {
@@ -127,7 +132,7 @@ Output:
   }
 }
 ```
-## Get information of the protocol on all chains
+### Get information of the protocol on all chains
 
 ```JSON
 {
