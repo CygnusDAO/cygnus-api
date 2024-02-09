@@ -13,7 +13,9 @@ Indexer used across all deployed chains to get the latest information of the pro
 etc, etc.
 <br /> 
 
-The API is publicly accessible at https://api.cygnusdao.finance, making it easy for developers to integrate Cygnus Finance data into their applications.It is also used by the dApp frontend to check for latest borrow positions, allowing liquidators to monitor loans and liquidate positions.
+The API is publicly accessible at https://api.cygnusdao.finance, making it easy for developers to integrate Cygnus Finance data into their applications. 
+
+It is also used by the dApp frontend to check for latest borrow positions, allowing liquidators to monitor loans and liquidate positions.
 
 ## Example Queries
 
